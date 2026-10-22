@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#080809" />
+<title>راکو — منوی دیجیتال</title>
+<meta name="description" content="منوی دیجیتال کافه راکو: قهوه‌ی گرم، نوشیدنی سرد، کلد برو و دمی، چای و دمنوش، کیک و دسر، صبحانه و برانچ." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Orbitron:wght@400..900&family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #080809;
+    --accent: #FFC107;
+    --accent-rgb: 255 193 7;
+    --coin-duration: 9s;
+    --font-body: 'Vazirmatn', system-ui, sans-serif;
+    --font-display: 'Lalezar', 'Vazirmatn', system-ui, sans-serif;
+    --font-latin: 'Orbitron', 'Vazirmatn', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: #fff;
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+  }
+  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+  img { display: block; max-width: 100%; }
+
+  .latin { font-family: var(--font-latin); }
+  .display { font-family: var(--font-display); }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    opacity: .7;
+    pointer-events: none;
+    background:
+      radial-gradient(1200px 620px at 50% -10%, rgba(255,193,7,.07), transparent 70%),
+      radial-gradient(900px 500px at 8% 100%, rgba(0,229,255,.05), transparent 70%);
+  }
+
+  /* ————— لوگوی محو پشت صفحه ————— */
+  .watermark { position: fixed; inset: 0; z-index: 0; display: grid; place-items: center; pointer-events: none; }
+  .watermark__glow {
+    position: absolute;
+    width: 46vmin; height: 46vmin;
+    border-radius: 9999px;
+    filter: blur(60px);
+    opacity: .45;
+    transition: background .7s ease;
+    background: radial-gradient(circle, rgb(var(--accent-rgb) / .55), transparent 70%);
+  }
+  .watermark img {
+    width: 58vmin; height: 58vmin;
+    object-fit: cover;
+    opacity: .12;
+    mix-blend-mode: screen;
+    filter: blur(.6px);
+  }
+
+  /* ————— هدر چسبان ————— */
+  .site-header {
+    position: sticky; top: 0; z-index: 30;
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    background: rgba(8,8,9,.75);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .brand-row { display: flex; align-items: center; gap: .75rem; max-width: 72rem; margin: 0 auto; padding: .75rem 1rem; }
+
+  .coin { position: relative; flex: none; perspective: 900px; }
+  .coin__glow {
+    position: absolute; inset: -.5rem;
+    border-radius: 9999px;
+    filter: blur(14px);
+    pointer-events: none;
+    transition: background .7s ease;
+    background: radial-gradient(circle, rgb(var(--accent-rgb) / .55), transparent 72%);
+    animation: neon-breathe 6s ease-in-out infinite;
+  }
+  .coin__disc {
+    position: relative;
+    display: grid; place-items: center;
+    width: 3rem; height: 3rem;
+    border-radius: 9999px;
+    border: 1px solid rgb(var(--accent-rgb) / .45);
+    background: rgba(255,255,255,.04);
+    box-shadow: 0 0 22px -6px rgb(var(--accent-rgb) / .65), inset 0 1px 0 rgba(255,255,255,.16);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: border-color .7s ease, box-shadow .7s ease;
+    animation: coin-spin var(--coin-duration, 9s) linear infinite;
+  }
+  .coin__face { width: 86%; height: 86%; border-radius: 9999px; overflow: hidden; mix-blend-mode: screen; }
+  .coin__face img { width: 100%; height: 100%; object-fit: cover; }
+
+  .brand { min-width: 0; flex: 1 1 auto; }
+  .brand__names { display: flex; min-width: 0; align-items: baseline; gap: .5rem; }
+  .brand__latin {
+    font-family: var(--font-latin);
+    font-size: 1rem;
+    letter-spacing: .4em;
+    text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    text-shadow: 0 0 12px rgb(var(--accent-rgb) / .6), 0 0 34px rgb(var(--accent-rgb) / .3);
+    transition: text-shadow .7s ease;
+  }
+  .brand__fa { font-family: var(--font-display); font-size: 1.125rem; color: rgba(255,255,255,.6); }
+  .brand__meta { display: flex; align-items: center; gap: .375rem; margin: .25rem 0 0; font-size: 11px; color: rgba(255,255,255,.4); }
+  .brand__meta svg { flex: none; width: .75rem; height: .75rem; }
+  .brand__meta span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .brand__sub { display: none; }
+  .hours-chip { display: none; }
+
+  /* ————— نوار بخش‌بندی ————— */
+  .cat-nav-wrap { position: relative; }
+  .cat-nav-wrap::before,
+  .cat-nav-wrap::after { content: ''; position: absolute; top: 0; bottom: 0; width: 3rem; z-index: 10; pointer-events: none; }
+  .cat-nav-wrap::before { right: 0; background: linear-gradient(to left, #080809, rgba(8,8,9,0)); }
+  .cat-nav-wrap::after { left: 0; background: linear-gradient(to right, #080809, rgba(8,8,9,0)); }
+
+  .cat-nav {
+    display: flex; align-items: center; gap: .5rem;
+    overflow-x: auto;
+    padding: .25rem 1rem .75rem;
+    scroll-behavior: smooth;
+    scrollbar-width: none; -ms-overflow-style: none;
+  }
+  .cat-nav::-webkit-scrollbar { display: none; }
+
+  .cat-chip {
+    display: flex; flex: none; align-items: center; gap: .5rem;
+    min-height: 48px;
+    padding: .625rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.03);
+    color: rgba(255,255,255,.55);
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1;
+    transition: background .3s, color .3s, border-color .3s, box-shadow .3s;
+  }
+  .cat-chip svg { width: 1rem; height: 1rem; }
+  .cat-chip:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
+  .cat-chip.is-active {
+    color: var(--accent);
+    border-color: rgb(var(--accent-rgb) / .55);
+    background: rgb(var(--accent-rgb) / .12);
+    box-shadow: 0 0 0 1px rgb(var(--accent-rgb) / .2), 0 12px 34px -14px rgb(var(--accent-rgb) / .9);
+    text-shadow: 0 0 10px rgb(var(--accent-rgb) / .75), 0 0 30px rgb(var(--accent-rgb) / .35);
+  }
+
+  .nav-arrow {
+    position: absolute; top: 50%; z-index: 20;
+    display: none; place-items: center;
+    width: 2.25rem; height: 2.25rem;
+    transform: translateY(-50%);
+    border-radius: 9999px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(13,13,17,.8);
+    color: rgba(255,255,255,.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: color .2s;
+  }
+  .nav-arrow:hover { color: #fff; }
+  .nav-arrow svg { width: 1rem; height: 1rem; }
+  .nav-arrow--right { right: .25rem; }
+  .nav-arrow--left { left: .25rem; }
+
+  /* ————— پنل بخش فعال ————— */
+  .page { position: relative; z-index: 10; max-width: 72rem; margin: 0 auto; padding: 2.25rem 1rem 0; }
+
+  .panel { animation: panel-in .5s cubic-bezier(.22,1,.36,1) both; }
+  .panel__head { display: flex; flex-direction: column; gap: 1.25rem; }
+  .panel__latin { font-family: var(--font-latin); font-size: 10px; letter-spacing: .45em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+  .panel__title-row { display: flex; align-items: center; gap: .75rem; margin-top: .75rem; }
+  .panel__icon {
+    display: grid; flex: none; place-items: center;
+    width: 2.75rem; height: 2.75rem;
+    border-radius: 1rem;
+    border: 1px solid rgb(var(--accent-rgb) / .4);
+    background: rgb(var(--accent-rgb) / .1);
+    color: var(--accent);
+    box-shadow: 0 0 26px -10px rgb(var(--accent-rgb) / .9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .panel__icon svg { width: 1.25rem; height: 1.25rem; }
+  .panel__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: clamp(2rem, 6vw, 3.3rem);
+    line-height: 1.1;
+    color: var(--accent);
+    text-shadow: 0 0 14px rgb(var(--accent-rgb) / .55), 0 0 52px rgb(var(--accent-rgb) / .28);
+  }
+  .panel__tagline { max-width: 36rem; margin: .75rem 0 0; font-size: .875rem; line-height: 1.9; color: rgba(255,255,255,.5); }
+  .panel__count {
+    flex: none; align-self: flex-start;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.03);
+    border-radius: 1rem;
+    padding: .75rem 1rem;
+    font-size: 11px;
+    color: rgba(255,255,255,.5);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .chips { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.5rem; }
+  .chip {
+    min-height: 44px;
+    padding: .5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.03);
+    color: rgba(255,255,255,.55);
+    font-size: 13px;
+    transition: background .3s, color .3s, border-color .3s, box-shadow .3s;
+  }
+  .chip:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.85); }
+  .chip:active { transform: scale(.95); }
+  .chip.is-active {
+    border-color: rgb(var(--accent-rgb) / .5);
+    color: var(--accent);
+    background: rgb(var(--accent-rgb) / .12);
+    box-shadow: 0 10px 30px -16px rgb(var(--accent-rgb) / 1);
+  }
+
+  /* ————— کارت‌های شیشه‌ای ————— */
+  .grid { display: grid; gap: 1rem; margin-top: 1.75rem; }
+
+  .card {
+    position: relative;
+    overflow: hidden;
+    border-radius: 1.5rem;
+    padding: 1px;
+    outline: none;
+    background: linear-gradient(150deg, rgb(var(--accent-rgb) / .45), rgba(255,255,255,.07) 45%, rgba(255,255,255,.02));
+    animation: rise .5s cubic-bezier(.22,1,.36,1) both;
+    animation-delay: calc(var(--i, 0) * 60ms);
+    transition: transform .5s ease;
+  }
+  .card:hover, .card:focus-visible { transform: translateY(-4px); }
+  .card__inner {
+    position: relative;
+    height: 100%;
+    border-radius: calc(1.5rem - 1px);
+    background: rgba(255,255,255,.03);
+    padding: 1.25rem;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    transition: background .5s ease;
+  }
+  .card:hover .card__inner, .card:focus-visible .card__inner { background: rgba(255,255,255,.06); }
+  .card__glow {
+    position: absolute; inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .7s ease;
+    background: radial-gradient(120% 90% at 85% 0%, rgb(var(--accent-rgb) / .18), transparent 62%);
+  }
+  .card:hover .card__glow, .card:focus-visible .card__glow { opacity: 1; }
+  .card__lift {
+    position: absolute; left: 50%; bottom: 0;
+    width: 10rem; height: 6rem;
+    transform: translate(-50%, 100%);
+    border-radius: 9999px;
+    filter: blur(24px);
+    pointer-events: none;
+    transition: transform .7s ease;
+    background: rgb(var(--accent-rgb) / .22);
+  }
+  .card:hover .card__lift, .card:focus-visible .card__lift { transform: translate(-50%, -1rem); }
+
+  .card__top { position: relative; display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+  .card__names { min-width: 0; }
+  .card__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    color: var(--accent);
+    text-shadow: 0 0 12px rgb(var(--accent-rgb) / .55), 0 0 36px rgb(var(--accent-rgb) / .22);
+  }
+  .card__latin { margin: .375rem 0 0; font-family: var(--font-latin); font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: rgba(255,255,255,.35); }
+  .card__badge {
+    display: flex; flex: none; align-items: center; gap: .25rem;
+    border: 1px solid rgb(var(--accent-rgb) / .4);
+    background: rgb(var(--accent-rgb) / .1);
+    color: var(--accent);
+    border-radius: 9999px;
+    padding: .25rem .625rem;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .card__badge svg { width: .75rem; height: .75rem; }
+  .card__desc { position: relative; margin: .75rem 0 0; font-size: 13px; line-height: 1.9; color: rgba(255,255,255,.55); }
+  .card__foot {
+    position: relative;
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,.07);
+  }
+  .card__price { font-family: var(--font-display); font-size: 1.25rem; color: var(--accent); }
+  .card__price small { margin-inline-start: .375rem; font-family: var(--font-body); font-size: 11px; color: rgba(255,255,255,.4); }
+  .card__tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .375rem; }
+  .card__tag {
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.04);
+    border-radius: 9999px;
+    padding: .25rem .625rem;
+    font-size: 10px;
+    color: rgba(255,255,255,.5);
+  }
+
+  .empty {
+    margin-top: 1.75rem;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.03);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    text-align: center;
+    font-size: .875rem;
+    color: rgba(255,255,255,.5);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  /* ————— فوتر ————— */
+  .site-footer {
+    position: relative; z-index: 10;
+    margin-top: 3rem;
+    border-top: 1px solid rgba(255,255,255,.07);
+    background: rgba(11,11,15,.7);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .footer-grid { display: grid; gap: 1.75rem; max-width: 72rem; margin: 0 auto; padding: 2.25rem 1rem; }
+  .footer-latin { font-family: var(--font-latin); font-size: .875rem; letter-spacing: .4em; color: #FFC107; }
+  .footer-tagline { margin: .75rem 0 0; font-size: 13px; line-height: 1.9; color: rgba(255,255,255,.5); }
+  .footer-label { display: flex; align-items: center; gap: .5rem; margin: 0; font-size: 12px; color: rgba(255,255,255,.4); }
+  .footer-label svg { width: .875rem; height: .875rem; }
+  .footer-value { margin: .5rem 0 0; font-size: 13px; color: rgba(255,255,255,.7); }
+  .footer-note { margin: .25rem 0 0; font-size: 12px; color: rgba(255,255,255,.4); }
+  .footer-link { display: inline-flex; align-items: center; gap: .5rem; margin-top: .75rem; font-size: 13px; color: rgba(255,255,255,.6); text-decoration: none; transition: color .2s; }
+  .footer-link:hover { color: #fff; }
+  .footer-link svg { width: 1rem; height: 1rem; }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,.05);
+    padding: 1rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    text-align: center;
+    font-size: 11px;
+    color: rgba(255,255,255,.35);
+  }
+
+  /* ————— موبایل بزرگ‌تر و بالاتر ————— */
+  @media (min-width: 640px) {
+    .brand-row { gap: 1rem; padding: .75rem 1.5rem; }
+    .coin__disc { width: 4rem; height: 4rem; }
+    .brand__latin { font-size: 1.125rem; }
+    .brand__meta { display: none; }
+    .brand__sub { display: block; margin: .25rem 0 0; font-size: 11px; color: rgba(255,255,255,.4); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .hours-chip {
+      display: flex; flex: none; align-items: center; gap: .5rem;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.03);
+      border-radius: 9999px;
+      padding: .5rem .75rem;
+      font-size: 11px;
+      color: rgba(255,255,255,.55);
+    }
+    .hours-chip svg { width: .875rem; height: .875rem; }
+    .cat-nav { padding: .25rem 1.5rem .75rem; }
+    .nav-arrow { display: grid; }
+    .page { padding: 3rem 1.5rem 0; }
+    .panel__head { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+    .panel__count { align-self: auto; }
+    .card__inner { padding: 1.5rem; }
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .footer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 2.25rem 1.5rem; }
+  }
+  @media (min-width: 1280px) {
+    .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  }
+
+  @keyframes coin-spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+  @keyframes neon-breathe {
+    0%, 100% { opacity: .45; transform: scale(1); }
+    50% { opacity: .85; transform: scale(1.07); }
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes panel-in { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .coin__disc, .coin__glow, .panel, .card { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+  <div class="watermark" aria-hidden="true">
+    <span class="watermark__glow"></span>
+    <img id="wmLogo" src="" alt="" />
+  </div>
+
+  <header class="site-header">
+    <div class="brand-row">
+      <div class="coin" aria-hidden="true">
+        <span class="coin__glow"></span>
+        <div class="coin__disc">
+          <div class="coin__face"><img id="coinLogo" src="" alt="" /></div>
+        </div>
+      </div>
+
+      <div class="brand">
+        <div class="brand__names">
+          <span class="brand__latin" id="brandLatin"></span>
+          <span class="brand__fa" id="brandFa"></span>
+        </div>
+        <p class="brand__meta">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="brandHours"></span>
+        </p>
+        <p class="brand__sub">منوی دیجیتال · هر روز تازه پخت می‌شود</p>
+      </div>
+
+      <div class="hours-chip">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="hoursChip"></span>
+      </div>
+    </div>
+
+    <div class="cat-nav-wrap">
+      <button class="nav-arrow nav-arrow--right" id="navPrev" type="button" aria-label="بخش‌های قبلی">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <nav class="cat-nav" id="catNav" role="tablist" aria-label="بخش‌های منو"></nav>
+      <button class="nav-arrow nav-arrow--left" id="navNext" type="button" aria-label="بخش‌های بعدی">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="page">
+    <section id="panel"></section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-grid">
+      <div>
+        <p class="footer-latin" id="footerLatin"></p>
+        <p class="footer-tagline" id="footerTagline"></p>
+      </div>
+
+      <div>
+        <p class="footer-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ساعت کار
+        </p>
+        <p class="footer-value" id="footerHours"></p>
+        <a class="footer-link" id="footerInstagram" href="#" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+          <span id="footerInstagramHandle"></span>
+        </a>
+      </div>
+
+      <div>
+        <p class="footer-label">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/></svg>
+          وای‌فای مهمان
+        </p>
+        <p class="footer-value" id="footerWifiSsid"></p>
+        <p class="footer-note" id="footerWifiPass"></p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">قیمت‌ها به تومان است · منو به‌صورت زنده به‌روزرسانی می‌شود</div>
+  </footer>
+
+<script>
+/* ——————————————————————————————————————————————
+   داده‌ی منو — برای تغییر محتوا همین بخش را ویرایش کن
+   —————————————————————————————————————————————— */
+const LOGO_SRC = 'https://media.base44.com/images/public/user_6a5bd6e70461b59ad08103f6/4da3f178a_2026-10-221829.png';
+const ALL_FILTER = 'همه';
+
+const NEON = {
+  amber: { primary: '#FFC107', rgb: '255 193 7' },
+  cyan: { primary: '#00E5FF', rgb: '0 229 255' },
+  violet: { primary: '#A78BFA', rgb: '167 139 250' },
+  emerald: { primary: '#34D399', rgb: '52 211 153' },
+  pink: { primary: '#FF2D55', rgb: '255 45 85' },
+  lime: { primary: '#A3E635', rgb: '163 230 53' }
+};
+
+const CAFE = {
+  name: 'راکو',
+  latin: 'ROCCO',
+  tagline: 'قهوه‌ی دست‌ساز، دسر تازه و صبحانه‌ای که روزت را می‌سازد.',
+  hours: 'هر روز ۸:۰۰ تا ۰۰:۰۰',
+  instagram: { handle: '@rocco.cafe', url: 'https://instagram.com/rocco.cafe' },
+  wifi: { ssid: 'Rocco Guest', password: 'rocco1404' }
+};
+
+const CATEGORIES = [
+  {
+    id: 'hot',
+    title: 'قهوه‌ی گرم',
+    latin: 'HOT COFFEE',
+    tagline: 'دانه‌ی تک‌خاستگاه، رست تازه‌ی هفتگی و شیری که با دقت استیم می‌شود.',
+    icon: 'coffee',
+    accent: NEON.amber,
+    filters: ['پرطرفدار', 'شیردار', 'تلخ و قوی', 'بدون کافئین'],
+    items: [
+      { name: 'اسپرسو', latin: 'ESPRESSO', description: 'دبل شات، ترکیب ۷۰٪ عربیکا برزیل و ۳۰٪ روبوستا با کرمای غلیظ.', price: 95000, tags: ['تلخ و قوی', 'پرطرفدار'] },
+      { name: 'آمریکانو', latin: 'AMERICANO', description: 'دو شات اسپرسو با آب داغ؛ بدنه‌ی روشن و پایان تلخ تمیز.', price: 115000, tags: ['تلخ و قوی'] },
+      { name: 'لاته', latin: 'CAFFE LATTE', description: 'شیر مخملی روی اسپرسو، با لته‌آرت دست‌ساز باریستا.', price: 165000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+      { name: 'کاپوچینو', latin: 'CAPPUCCINO', description: 'فوم بلند و کاکائوی رویی؛ تعادل کلاسیک ایتالیایی.', price: 155000, tags: ['شیردار'] },
+      { name: 'موکا', latin: 'CAFE MOCHA', description: 'شکلات تلخ ۷۰٪، اسپرسو و شیر بخارپز با خامه‌ی سبک.', price: 185000, tags: ['شیردار'] },
+      { name: 'فلت وایت', latin: 'FLAT WHITE', description: 'نسبت شیر کمتر و طعم قهوه‌ی پررنگ‌تر برای طرفداران بدنه.', price: 175000, tags: ['شیردار'] },
+      { name: 'اسپرسو دیکف', latin: 'DECAF ESPRESSO', description: 'بدون کافئین، با همان بدنه و شیرینی طبیعی دانه.', price: 105000, tags: ['بدون کافئین', 'تلخ و قوی'] }
+    ]
+  },
+  {
+    id: 'cold',
+    title: 'نوشیدنی سرد',
+    latin: 'ICED DRINKS',
+    tagline: 'یخِ خردشده، لیوان سرد و ترکیب‌هایی که هوای گرم را جا می‌گذارند.',
+    icon: 'snowflake',
+    accent: NEON.cyan,
+    filters: ['پرطرفدار', 'شیردار', 'میوه‌ای'],
+    items: [
+      { name: 'آیس لاته', latin: 'ICED LATTE', description: 'اسپرسو روی شیر سرد و یخ؛ خنک، ملایم و پرطرفدار.', price: 185000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+      { name: 'آیس آمریکانو', latin: 'ICED AMERICANO', description: 'تلخی روشن روی یخ، با رایحه‌ی مرکباتی دانه‌ی اتیوپی.', price: 135000, tags: [] },
+      { name: 'فراپه کارامل', latin: 'CARAMEL FRAPPÉ', description: 'قهوه‌ی سرد، کارامل نمکی و خامه؛ شیرین و خنک.', price: 225000, tags: ['شیردار', 'پرطرفدار'] },
+      { name: 'موهیتو کلاسیک', latin: 'CLASSIC MOJITO', description: 'لیموی تازه، نعنا و سودا روی یخ خردشده.', price: 165000, tags: ['میوه‌ای', 'پرطرفدار'] },
+      { name: 'لیموناد نعنا', latin: 'MINT LEMONADE', description: 'آب‌لیموی تازه با شربت دست‌ساز و برگ نعنا.', price: 155000, tags: ['میوه‌ای'] },
+      { name: 'آیس موکا', latin: 'ICED MOCHA', description: 'شکلات، اسپرسو و شیر سرد با تاپینگ کاکائو.', price: 195000, tags: ['شیردار'] }
+    ]
+  },
+  {
+    id: 'brew',
+    title: 'کلد برو و دمی',
+    latin: 'COLD BREW & POUR OVER',
+    tagline: 'دم‌آوری آرام، ۱۶ ساعت خیساندن و عصاره‌گیری دقیق با ترازو.',
+    icon: 'cupsoda',
+    accent: NEON.violet,
+    filters: ['کلد برو', 'دمی', 'پرطرفدار'],
+    items: [
+      { name: 'کلد برو کلاسیک', latin: 'CLASSIC COLD BREW', description: '۱۶ ساعت دم سرد؛ شیرینی طبیعی و بدون تلخی.', price: 165000, tags: ['کلد برو', 'پرطرفدار'] },
+      { name: 'کلد برو نارگیل', latin: 'COCONUT COLD BREW', description: 'کلد برو با شیر نارگیل و رایحه‌ی وانیل بوربون.', price: 185000, tags: ['کلد برو'] },
+      { name: 'وی ۶۰ اتیوپی', latin: 'V60 ETHIOPIA', description: 'تک‌خاستگاه یرگاچف؛ رایحه‌ی یاس، هلو و اسیدیته‌ی روشن.', price: 195000, tags: ['دمی'], featured: true },
+      { name: 'کمکس کلمبیا', latin: 'CHEMEX COLOMBIA', description: 'بدنه‌ی شفاف با نت‌های کارامل و بادام.', price: 185000, tags: ['دمی'] },
+      { name: 'ایروپرس', latin: 'AEROPRESS', description: 'عصاره‌ی غلیظ و نرم؛ فنجانی متعادل برای عصرانه.', price: 175000, tags: ['دمی'] }
+    ]
+  },
+  {
+    id: 'tea',
+    title: 'چای و دمنوش',
+    latin: 'TEA & INFUSION',
+    tagline: 'دمنوش‌های دم‌کرده‌ی روز با گیاهان خشک‌شده در سایه.',
+    icon: 'leaf',
+    accent: NEON.emerald,
+    filters: ['گیاهی', 'سیاه', 'سرد', 'پرطرفدار'],
+    items: [
+      { name: 'چای ماسالا', latin: 'MASALA CHAI', description: 'هل، دارچین، زنجفیل و شیر؛ گرم و ادویه‌ای.', price: 145000, tags: ['گیاهی', 'پرطرفدار'] },
+      { name: 'دمنوش به و دارچین', latin: 'QUINCE INFUSION', description: 'بهِ خشک‌شده با چوب دارچین؛ ملایم و خوش‌عطر.', price: 135000, tags: ['گیاهی'] },
+      { name: 'چای سبز سنچا', latin: 'SENCHA GREEN TEA', description: 'چای سبز ژاپنی با نت‌های علفی و دریایی.', price: 155000, tags: ['گیاهی'] },
+      { name: 'چای سیاه قلم', latin: 'BLACK TEA', description: 'قلم لاهیجان در قوری سنتی، همراه با نبات.', price: 95000, tags: ['سیاه'] },
+      { name: 'آیس تی هلو', latin: 'PEACH ICED TEA', description: 'چای سیاه سرد با پوره‌ی هلو و یخ.', price: 155000, tags: ['سرد'] }
+    ]
+  },
+  {
+    id: 'dessert',
+    title: 'کیک و دسر',
+    latin: 'CAKES & DESSERTS',
+    tagline: 'شیرینی‌های تازه‌ی روز، پخته‌شده در آشپزخانه‌ی خودمان.',
+    icon: 'cake',
+    accent: NEON.pink,
+    filters: ['شکلاتی', 'میوه‌ای', 'پرطرفدار'],
+    items: [
+      { name: 'چیزکیک نیویورکی', latin: 'NEW YORK CHEESECAKE', description: 'بافت متراکم و خامه‌ای روی بیسکویت کره‌ای.', price: 225000, tags: ['پرطرفدار'], featured: true },
+      { name: 'براونی فاج', latin: 'FUDGE BROWNIE', description: 'شکلات تلخ ۷۰٪ با مغز نرم و گردوی بوداده.', price: 195000, tags: ['شکلاتی', 'پرطرفدار'] },
+      { name: 'تارت لیمو', latin: 'LEMON TART', description: 'کرم لیموی ترش و شیرین روی تارت کره‌ای.', price: 210000, tags: ['میوه‌ای'] },
+      { name: 'کیک هویج و گردو', latin: 'CARROT & WALNUT CAKE', description: 'ادویه‌ی گرم، هویج رنده‌شده و فراستینگ پنیر خامه‌ای.', price: 195000, tags: [] },
+      { name: 'پاناکوتا وانیل', latin: 'VANILLA PANNA COTTA', description: 'دسر شیر و وانیل بوربون با سس تمشک.', price: 185000, tags: ['میوه‌ای'] }
+    ]
+  },
+  {
+    id: 'brunch',
+    title: 'صبحانه و برانچ',
+    latin: 'BREAKFAST & BRUNCH',
+    tagline: 'از ۸ صبح تا ۱۳؛ تخم‌مرغ تازه، نان تازه و سبزیجات بازار روز.',
+    icon: 'sunrise',
+    accent: NEON.lime,
+    filters: ['صبحانه', 'گیاهی', 'پرطرفدار'],
+    items: [
+      { name: 'املت قارچ و پنیر', latin: 'MUSHROOM & CHEESE OMELETTE', description: 'سه تخم‌مرغ محلی، قارچ سوتی و پنیر گودا.', price: 245000, tags: ['صبحانه', 'پرطرفدار'] },
+      { name: 'آووکادو تست', latin: 'AVOCADO TOAST', description: 'نان خمیرمایه، آووکادو، تخم‌مرغ آب‌پز و دانه‌ی کنجد.', price: 285000, tags: ['گیاهی', 'پرطرفدار'], featured: true },
+      { name: 'کروسان + مربا', latin: 'BUTTER CROISSANT', description: 'کروسان کره‌ای تازه با مربای خانگی و کره‌ی حیوانی.', price: 165000, tags: ['صبحانه'] },
+      { name: 'پنکیک سه‌تایی', latin: 'THREE PANCAKES', description: 'پنکیک نرم با شربت افرا، موز و توت‌فرنگی.', price: 235000, tags: ['صبحانه'] },
+      { name: 'نان تست فرانسوی', latin: 'FRENCH TOAST', description: 'نان بریوش در شیر و وانیل با پودر قند و دارچین.', price: 215000, tags: ['صبحانه'] }
+    ]
+  }
+];
+
+/* ——————————————————————————————————————————————
+   آیکون‌ها
+   —————————————————————————————————————————————— */
+const ICONS = {
+  coffee: '<path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>',
+  snowflake: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
+  cupsoda: '<path d="m6 8 1.75 12.28a2 2 0 0 0 2 1.72h4.54a2 2 0 0 0 2-1.72L18 8"/><path d="M5 8h14"/><path d="M7 15a6.47 6.47 0 0 1 5 0 6.47 6.47 0 0 0 5 0"/><path d="m12 8 1-6h2"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+  cake: '<path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/>',
+  sunrise: '<path d="M12 2v8"/><path d="m4.93 10.93 1.41 1.41"/><path d="M2 18h2"/><path d="M20 18h2"/><path d="m19.07 10.93-1.41 1.41"/><path d="M22 22H2"/><path d="m8 6 4-4 4 4"/><path d="M16 18a4 4 0 0 0-8 0"/>',
+  sparkles: '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/>'
+};
+
+const icon = (name) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || '') + '</svg>';
+
+/* ——————————————————————————————————————————————
+   وضعیت و رندر
+   —————————————————————————————————————————————— */
+const state = { cat: 0, filter: ALL_FILTER };
+const $ = (id) => document.getElementById(id);
+
+const faNum = (value) => Number(value).toLocaleString('fa-IR');
+const accentVars = (accent) => '--accent:' + accent.primary + ';--accent-rgb:' + accent.rgb + ';';
+
+function applyAccent(accent) {
+  const root = document.documentElement.style;
+  root.setProperty('--accent', accent.primary);
+  root.setProperty('--accent-rgb', accent.rgb);
+}
+
+function renderNav() {
+  $('catNav').innerHTML = CATEGORIES.map((cat, i) =>
+    '<button type="button" role="tab" data-index="' + i + '" aria-selected="' + (i === state.cat) + '"' +
+    ' class="cat-chip' + (i === state.cat ? ' is-active' : '') + '" style="' + accentVars(cat.accent) + '">' +
+    icon(cat.icon) + '<span>' + cat.title + '</span></button>'
+  ).join('');
+
+  const active = $('catNav').querySelector('.is-active');
+  if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+}
+
+function cardHTML(item, index) {
+  const tags = item.tags.length
+    ? '<div class="card__tags">' + item.tags.map((tag) => '<span class="card__tag">' + tag + '</span>').join('') + '</div>'
+    : '';
+  const featured = item.featured
+    ? '<span class="card__badge">' + icon('sparkles') + 'پیشنهاد باریستا</span>'
+    : '';
+  const latin = item.latin ? '<p class="card__latin">' + item.latin + '</p>' : '';
+
+  return '<article class="card" style="--i:' + index + '" tabindex="0">' +
+    '<div class="card__inner">' +
+      '<span class="card__glow"></span>' +
+      '<span class="card__lift"></span>' +
+      '<div class="card__top">' +
+        '<div class="card__names"><h3 class="card__name">' + item.name + '</h3>' + latin + '</div>' +
+        featured +
+      '</div>' +
+      '<p class="card__desc">' + item.description + '</p>' +
+      '<div class="card__foot">' +
+        '<span class="card__price">' + faNum(item.price) + '<small>تومان</small></span>' +
+        tags +
+      '</div>' +
+    '</div>' +
+  '</article>';
+}
+
+function renderPanel() {
+  const cat = CATEGORIES[state.cat];
+  const items = state.filter === ALL_FILTER ? cat.items : cat.items.filter((item) => item.tags.indexOf(state.filter) > -1);
+  const chips = [ALL_FILTER].concat(cat.filters).map((chip) =>
+    '<button type="button" class="chip' + (chip === state.filter ? ' is-active' : '') + '" data-filter="' + chip + '">' + chip + '</button>'
+  ).join('');
+
+  const body = items.length
+    ? '<div class="grid">' + items.map(cardHTML).join('') + '</div>'
+    : '<div class="empty">فعلاً آیتمی با این ویژگی در این بخش نداریم.</div>';
+
+  $('panel').innerHTML =
+    '<section class="panel" style="' + accentVars(cat.accent) + '">' +
+      '<div class="panel__head">' +
+        '<div>' +
+          '<span class="panel__latin">' + cat.latin + '</span>' +
+          '<div class="panel__title-row">' +
+            '<span class="panel__icon">' + icon(cat.icon) + '</span>' +
+            '<h2 class="panel__title">' + cat.title + '</h2>' +
+          '</div>' +
+          '<p class="panel__tagline">' + cat.tagline + '</p>' +
+        '</div>' +
+        '<div class="panel__count">' + faNum(items.length) + ' از ' + faNum(cat.items.length) + ' آیتم</div>' +
+      '</div>' +
+      '<div class="chips">' + chips + '</div>' +
+      body +
+    '</section>';
+
+  applyAccent(cat.accent);
+}
+
+/* ——————————————————————————————————————————————
+   تعامل‌ها
+   —————————————————————————————————————————————— */
+$('catNav').addEventListener('click', (event) => {
+  const chip = event.target.closest('.cat-chip');
+  if (!chip) return;
+  const index = Number(chip.dataset.index);
+  if (index === state.cat) return;
+  state.cat = index;
+  state.filter = ALL_FILTER;
+  renderNav();
+  renderPanel();
+});
+
+$('panel').addEventListener('click', (event) => {
+  const chip = event.target.closest('.chip');
+  if (!chip) return;
+  state.filter = chip.dataset.filter;
+  renderPanel();
+});
+
+$('navPrev').addEventListener('click', () => $('catNav').scrollBy({ left: 280, behavior: 'smooth' }));
+$('navNext').addEventListener('click', () => $('catNav').scrollBy({ left: -280, behavior: 'smooth' }));
+
+/* سرعت چرخش سکه با اسکرول */
+let coinFrame = 0;
+window.addEventListener('scroll', () => {
+  cancelAnimationFrame(coinFrame);
+  coinFrame = requestAnimationFrame(() => {
+    const progress = Math.min(1, window.scrollY / 700);
+    document.documentElement.style.setProperty('--coin-duration', (9 - progress * 4.5) + 's');
+  });
+}, { passive: true });
+
+/* ——————————————————————————————————————————————
+   شروع
+   —————————————————————————————————————————————— */
+$('wmLogo').src = LOGO_SRC;
+$('coinLogo').src = LOGO_SRC;
+$('brandLatin').textContent = CAFE.latin;
+$('brandFa').textContent = CAFE.name;
+$('brandHours').textContent = CAFE.hours;
+$('hoursChip').textContent = CAFE.hours;
+$('footerLatin').textContent = CAFE.latin;
+$('footerTagline').textContent = CAFE.tagline;
+$('footerHours').textContent = CAFE.hours;
+$('footerInstagram').href = CAFE.instagram.url;
+$('footerInstagramHandle').textContent = CAFE.instagram.handle;
+$('footerWifiSsid').textContent = CAFE.wifi.ssid;
+$('footerWifiPass').textContent = 'رمز: ' + CAFE.wifi.password;
+
+renderNav();
+renderPanel();
+</script>
+</body>
+</html>
