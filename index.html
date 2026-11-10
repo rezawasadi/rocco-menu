@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#080809" />
+<meta http-equiv="Cache-Control" content="no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
 <title>ROCCO — Digital Menu</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -328,6 +330,7 @@
     </div>
     <div class="footer-bottom">
       <span>قیمت‌ها به تومان است · منو به‌صورت زنده به‌روزرسانی می‌شود</span>
+      <span id="syncStamp" style="font-size:10px; color:rgba(255,255,255,0.28)"></span>
 
       <!-- Freelancer Signature with Instagram Icon -->
       <div class="freelancer-signature">
@@ -381,22 +384,53 @@ const CAFE_INFO = {
   hours: 'هر روز ۷:۰۰ تا ۱۳:۰۰ و ۱۷:۰۰ تا ۲۳:۰۰'
 };
 
+/* نسخهٔ پشتیبان: دقیقاً همان محتوای menu-data.json (اگر فایل در دسترس نبود) */
 const INITIAL_DATA = [
-  {
-    id: 'hot', title: 'قهوه‌ی گرم', tagline: 'دانه‌ی تک‌خاستگاه، رست تازه‌ی هفتگی.',
-    icon: 'coffee', accentKey: 'amber', filters: ['پرطرفدار', 'شیردار', 'تلخ و قوی'],
-    items: [
-      { id: 'h1', name: 'اسپرسو', latin: 'ESPRESSO', description: 'دبل شات، ترکیب ۷۰٪ عربیکا.', price: 95000, tags: ['تلخ و قوی', 'پرطرفدار'] },
-      { id: 'h2', name: 'لاته', latin: 'CAFFE LATTE', description: 'شیر مخملی روی اسپرسو.', price: 165000, tags: ['شیردار', 'پرطرفدار'], featured: true }
-    ]
-  },
-  {
-    id: 'cold', title: 'نوشیدنی سرد', tagline: 'یخِ خردشده و ترکیب‌های خنک.',
-    icon: 'snowflake', accentKey: 'cyan', filters: ['پرطرفدار', 'میوه‌ای'],
-    items: [
-      { id: 'c1', name: 'آیس لاته', latin: 'ICED LATTE', description: 'اسپرسو روی شیر سرد و یخ.', price: 185000, tags: ['شیردار', 'پرطرفدار'], featured: true }
-    ]
-  }
+  { id: 'hot', title: 'قهوه‌ی گرم', latin: 'HOT COFFEE', tagline: 'دانه‌ی تک‌خاستگاه، رست تازه‌ی هفتگی و شیری که با دقت استیم می‌شود.', icon: 'coffee', accentKey: 'amber', filters: ['پرطرفدار', 'شیردار', 'تلخ و قوی', 'بدون کافئین'], items: [
+    { id: 'espresso', name: 'اسپرسو', latin: 'Espresso', description: 'دبل شات، ترکیب ۷۰٪ عربیکا برزیل و ۳۰٪ روبوستا با کرمای غلیظ.', price: 95000, tags: ['تلخ و قوی', 'پرطرفدار'] },
+    { id: 'americano', name: 'آمریکانو', latin: 'Americano', description: 'دو شات اسپرسو با آب داغ؛ بدنه‌ی روشن و پایان تلخ تمیز.', price: 115000, tags: ['تلخ و قوی'] },
+    { id: 'latte', name: 'لاته', latin: 'Caffe Latte', description: 'شیر مخملی روی اسپرسو، با لته‌آرت دست‌ساز باریستا.', price: 165000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+    { id: 'cappuccino', name: 'کاپوچینو', latin: 'Cappuccino', description: 'فوم بلند و کاکائوی رویی؛ تعادل کلاسیک ایتالیایی.', price: 155000, tags: ['شیردار'] },
+    { id: 'mocha', name: 'موکا', latin: 'Cafe Mocha', description: 'شکلات تلخ ۷۰٪، اسپرسو و شیر بخارپز با خامه‌ی سبک.', price: 185000, tags: ['شیردار'] },
+    { id: 'flat-white', name: 'فلت وایت', latin: 'Flat White', description: 'نسبت شیر کمتر و طعم قهوه‌ی پررنگ‌تر برای طرفداران بدنه.', price: 175000, tags: ['شیردار'] },
+    { id: 'decaf', name: 'اسپرسو دیکف', latin: 'Decaf Espresso', description: 'بدون کافئین، با همان بدنه و شیرینی طبیعی دانه.', price: 105000, tags: ['بدون کافئین', 'تلخ و قوی'] }
+  ] },
+  { id: 'cold', title: 'نوشیدنی سرد', latin: 'ICED DRINKS', tagline: 'یخِ خردشده، لیوان سرد و ترکیب‌هایی که هوای گرم را جا می‌گذارند.', icon: 'snowflake', accentKey: 'cyan', filters: ['پرطرفدار', 'شیردار', 'میوه‌ای'], items: [
+    { id: 'iced-latte', name: 'آیس لاته', latin: 'Iced Latte', description: 'اسپرسو روی شیر سرد و یخ؛ خنک، ملایم و پرطرفدار.', price: 185000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+    { id: 'iced-americano', name: 'آیس آمریکانو', latin: 'Iced Americano', description: 'تلخی روشن روی یخ، با رایحه‌ی مرکباتی دانه‌ی اتیوپی.', price: 135000, tags: [] },
+    { id: 'frappe-caramel', name: 'فراپه کارامل', latin: 'Caramel Frappé', description: 'قهوه‌ی سرد، کارامل نمکی و خامه؛ شیرین و خنک.', price: 225000, tags: ['شیردار', 'پرطرفدار'] },
+    { id: 'mojito', name: 'موهیتو کلاسیک', latin: 'Classic Mojito', description: 'لیموی تازه، نعنا و سودا روی یخ خردشده.', price: 165000, tags: ['میوه‌ای', 'پرطرفدار'] },
+    { id: 'lemonade', name: 'لیموناد نعنا', latin: 'Mint Lemonade', description: 'آب‌لیموی تازه با شربت دست‌ساز و برگ نعنا.', price: 155000, tags: ['میوه‌ای'] },
+    { id: 'iced-mocha', name: 'آیس موکا', latin: 'Iced Mocha', description: 'شکلات، اسپرسو و شیر سرد با تاپینگ کاکائو.', price: 195000, tags: ['شیردار'] }
+  ] },
+  { id: 'brew', title: 'کلد برو و دمی', latin: 'COLD BREW & POUR OVER', tagline: 'دم‌آوری آرام، ۱۶ ساعت خیساندن و عصاره‌گیری دقیق با ترازو.', icon: 'cupsoda', accentKey: 'violet', filters: ['کلد برو', 'دمی', 'پرطرفدار'], items: [
+    { id: 'cold-brew', name: 'کلد برو کلاسیک', latin: 'Classic Cold Brew', description: '۱۶ ساعت دم سرد؛ شیرینی طبیعی و بدون تلخی.', price: 165000, tags: ['کلد برو', 'پرطرفدار'] },
+    { id: 'cold-brew-coconut', name: 'کلد برو نارگیل', latin: 'Coconut Cold Brew', description: 'کلد برو با شیر نارگیل و رایحه‌ی وانیل بوربون.', price: 185000, tags: ['کلد برو'] },
+    { id: 'v60', name: 'وی ۶۰ اتیوپی', latin: 'V60 Ethiopia', description: 'تک‌خاستگاه یرگاچف؛ رایحه‌ی یاس، هلو و اسیدیته‌ی روشن.', price: 195000, tags: ['دمی'], featured: true },
+    { id: 'chemex', name: 'کمکس کلمبیا', latin: 'Chemex Colombia', description: 'بدنه‌ی شفاف با نت‌های کارامل و بادام.', price: 185000, tags: ['دمی'] },
+    { id: 'aeropress', name: 'ایروپرس', latin: 'AeroPress', description: 'عصاره‌ی غلیظ و نرم؛ فنجانی متعادل برای عصرانه.', price: 175000, tags: ['دمی'] }
+  ] },
+  { id: 'tea', title: 'چای و دمنوش', latin: 'TEA & INFUSION', tagline: 'دمنوش‌های دم‌کرده‌ی روز با گیاهان خشک‌شده در سایه.', icon: 'leaf', accentKey: 'emerald', filters: ['گیاهی', 'سیاه', 'سرد', 'پرطرفدار'], items: [
+    { id: 'masala', name: 'چای ماسالا', latin: 'Masala Chai', description: 'هل، دارچین، زنجفیل و شیر؛ گرم و ادویه‌ای.', price: 145000, tags: ['گیاهی', 'پرطرفدار'] },
+    { id: 'quince', name: 'دمنوش به و دارچین', latin: 'Quince Infusion', description: 'بهِ خشک‌شده با چوب دارچین؛ ملایم و خوش‌عطر.', price: 135000, tags: ['گیاهی'] },
+    { id: 'sencha', name: 'چای سبز سنچا', latin: 'Sencha Green Tea', description: 'چای سبز ژاپنی با نت‌های علفی و دریایی.', price: 155000, tags: ['گیاهی'] },
+    { id: 'black-tea', name: 'چای سیاه قلم', latin: 'Black Tea', description: 'قلم لاهیجان در قوری سنتی، همراه با نبات.', price: 95000, tags: ['سیاه'] },
+    { id: 'iced-peach', name: 'آیس تی هلو', latin: 'Peach Iced Tea', description: 'چای سیاه سرد با پوره‌ی هلو و یخ.', price: 155000, tags: ['سرد'] }
+  ] },
+  { id: 'dessert', title: 'کیک و دسر', latin: 'CAKES & DESSERTS', tagline: 'شیرینی‌های تازه‌ی روز، پخته‌شده در آشپزخانه‌ی خودمان.', icon: 'cake', accentKey: 'pink', filters: ['شکلاتی', 'میوه‌ای', 'پرطرفدار'], items: [
+    { id: 'cheesecake', name: 'چیزکیک نیویورکی', latin: 'New York Cheesecake', description: 'بافت متراکم و خامه‌ای روی بیسکویت کره‌ای.', price: 225000, tags: ['پرطرفدار'], featured: true },
+    { id: 'brownie', name: 'براونی فاج', latin: 'Fudge Brownie', description: 'شکلات تلخ ۷۰٪ با مغز نرم و گردوی بوداده.', price: 195000, tags: ['شکلاتی', 'پرطرفدار'] },
+    { id: 'lemon-tart', name: 'تارت لیمو', latin: 'Lemon Tart', description: 'کرم لیموی ترش و شیرین روی تارت کره‌ای.', price: 210000, tags: ['میوه‌ای'] },
+    { id: 'carrot-cake', name: 'کیک هویج و گردو', latin: 'Carrot & Walnut Cake', description: 'ادویه‌ی گرم، هویج رنده‌شده و فراستینگ پنیر خامه‌ای.', price: 195000, tags: [] },
+    { id: 'panna-cotta', name: 'پاناکوتا وانیل', latin: 'Vanilla Panna Cotta', description: 'دسر شیر و وانیل بوربون با سس تمشک.', price: 185000, tags: ['میوه‌ای'] }
+  ] },
+  { id: 'brunch', title: 'صبحانه و برانچ', latin: 'BREAKFAST & BRUNCH', tagline: 'از ۸ صبح تا ۱۳؛ تخم‌مرغ تازه، نان تازه و سبزیجات بازار روز.', icon: 'sunrise', accentKey: 'lime', filters: ['صبحانه', 'گیاهی', 'پرطرفدار'], items: [
+    { id: 'omelette', name: 'املت قارچ و پنیر', latin: 'Mushroom & Cheese Omelette', description: 'سه تخم‌مرغ محلی، قارچ سوتی و پنیر گودا.', price: 245000, tags: ['صبحانه', 'پرطرفدار'] },
+    { id: 'avocado-toast', name: 'آووکادو تست', latin: 'Avocado Toast', description: 'نان خمیرمایه، آووکادو، تخم‌مرغ آب‌پز و دانه‌ی کنجد.', price: 285000, tags: ['گیاهی', 'پرطرفدار'], featured: true },
+    { id: 'croissant', name: 'کروسان + مربا', latin: 'Butter Croissant', description: 'کروسان کره‌ای تازه با مربای خانگی و کره‌ی حیوانی.', price: 165000, tags: ['صبحانه'] },
+    { id: 'pancake', name: 'پنکیک سه‌تایی', latin: 'Three Pancakes', description: 'پنکیک نرم با شربت افرا، موز و توت‌فرنگی.', price: 235000, tags: ['صبحانه'] },
+    { id: 'french-toast', name: 'نان تست فرانسوی', latin: 'French Toast', description: 'نان بریوش در شیر و وانیل با پودر قند و دارچین.', price: 215000, tags: ['صبحانه'] }
+  ] }
 ];
 
 const ICONS = {
@@ -660,6 +694,7 @@ class RoccoAdmin {
       sessionStorage.setItem(PIN_KEY, pin);
       menuData = normalizeCategories(json.categories || ready);
       currentSignature = signatureOf(menuData);
+      appliedStamp = Date.now(); /* این ذخیره تازه‌ترین نسخه است */
       refreshMenu();
       this.showToast('✅ ذخیره شد · تغییرات برای همهٔ بازدیدکنندگان اعمال می‌شود' + draftNote);
       setTimeout(() => this.close(), 1200);
@@ -925,7 +960,13 @@ const API_ORIGIN = 'https://base44.app/api/apps/6ada5bcf8b28629c9afca2dd';
 const API_GET = API_ORIGIN + '/functions/getMenu';
 const API_SAVE = API_ORIGIN + '/functions/saveMenu';
 const PIN_KEY = 'rocco_admin_pin';
+/* فایل دادهٔ مشترک منو: کنار همین صفحه (روی گیت‌هاب) قرار می‌گیرد و
+   همهٔ دستگاه‌ها همین یک فایل را می‌خوانند */
+const DATA_FILE = new URL('menu-data.json', window.location.href).href;
 let currentSignature = '';
+let appliedStamp = 0;
+
+const stampOf = (json) => (json ? Date.parse(json.updated || json.updated_date || '') || 0 : 0);
 
 const signatureOf = (list) => JSON.stringify(list);
 
@@ -972,6 +1013,47 @@ async function fetchServerMenu() {
   return json;
 }
 
+async function fetchFileMenu() {
+  const res = await fetch(DATA_FILE + '?v=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json || !Array.isArray(json.categories) || !json.categories.length) return null;
+  return json;
+}
+
+/* جدیدترین نسخه (فایل مشترک یا سرور) را روی صفحه می‌گذارد */
+function useSharedData(json) {
+  const list = normalizeCategories(json.categories);
+  const when = stampOf(json);
+  appliedStamp = Math.max(appliedStamp, when);
+
+  const stampEl = $('syncStamp');
+  if (stampEl) {
+    stampEl.textContent = when
+      ? 'آخرین به‌روزرسانی منو: ' + new Date(when).toLocaleString('fa-IR', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+  }
+
+  const sig = signatureOf(list);
+  if (sig === currentSignature) return;
+
+  menuData = list;
+  currentSignature = sig;
+  if (state.cat >= menuData.length) state.cat = 0;
+  renderNav();
+  renderPanel();
+}
+
+/* بارگذاری اول: هم فایل مشترک و هم سرور خوانده می‌شود و تازه‌ترین برنده است */
+async function bootData() {
+  const [fromFile, fromServer] = await Promise.all([
+    fetchFileMenu().catch(() => null),
+    fetchServerMenu().catch(() => null)
+  ]);
+  const chosen = stampOf(fromServer) > stampOf(fromFile) ? fromServer : (fromFile || fromServer);
+  if (chosen) useSharedData(chosen);
+}
+
 async function syncFromServer() {
   try {
     if (admin && admin.overlay && admin.overlay.classList.contains('active')) return;
@@ -980,15 +1062,8 @@ async function syncFromServer() {
   try {
     const json = await fetchServerMenu();
     if (!json) return;
-    const next = normalizeCategories(json.categories);
-    const nextSignature = signatureOf(next);
-    if (nextSignature === currentSignature) return;
-
-    menuData = next;
-    currentSignature = nextSignature;
-    if (state.cat >= menuData.length) state.cat = 0;
-    renderNav();
-    renderPanel();
+    if (stampOf(json) < appliedStamp) return; /* فایل مشترک تازه‌تر است */
+    useSharedData(json);
   } catch (e) { /* آفلاین: نسخهٔ ذخیره‌شده روی همین دستگاه نمایش داده می‌شود */ }
 }
 
@@ -1136,8 +1211,8 @@ $('footerHours').textContent = CAFE_INFO.hours;
 
 const admin = new RoccoAdmin(menuData);
 
-/* دریافت نسخهٔ مشترک از سرور و همگام‌سازی زنده با پنل مدیریت */
-syncFromServer();
+/* دریافت نسخهٔ مشترک (فایل داده + سرور) و همگام‌سازی زنده با پنل مدیریت */
+bootData();
 setInterval(syncFromServer, 15000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) syncFromServer(); });
 </script>
