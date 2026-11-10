@@ -334,7 +334,7 @@
         ساخته شده توسط
         <a href="https://instagram.com/rez.ink_" target="_blank">
           <svg style="width:12px; height:12px; vertical-align:middle; margin-left:2px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-          rez.ink_@
+          @rez.ink_
         </a>
       </div>
     </div>
@@ -462,6 +462,8 @@ class RoccoAdmin {
   }
 
   open() {
+    /* پنل همیشه آخرین نسخهٔ مشترک را برای ویرایش باز می‌کند */
+    this.data = JSON.parse(JSON.stringify(menuData));
     this.renderDashboard();
     this.overlay.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -607,24 +609,63 @@ class RoccoAdmin {
     const ready = this.data.filter(cat => cat.items.length > 0);
     this.data = ready;
 
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(ready));
-    } catch (err) {
-      /* ذخیره‌ی دائمی ممکن نیست: منو در همین صفحه به‌روزرسانی می‌شود */
-      menuData = JSON.parse(JSON.stringify(ready));
-      refreshMenu();
-      this.showToast('⚠️ ذخیره‌ی دائمی در این مرورگر ممکن نیست؛ تغییرات تا بستن صفحه می‌ماند');
-      setTimeout(() => this.close(), 1600);
+    /* کش آفلاین روی همین دستگاه (اگر سرور در دسترس نبود) */
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(ready)); } catch (err) { /* نادیده */ }
+
+    this.pushToServer(ready, drafts.length);
+  }
+
+  /* ——— ذخیره روی حافظهٔ مشترک (سرور) ——— */
+  applyLocalOnly(ready, msg) {
+    menuData = normalizeCategories(ready);
+    currentSignature = signatureOf(menuData);
+    refreshMenu();
+    this.showToast(msg);
+    setTimeout(() => this.close(), 1800);
+  }
+
+  async pushToServer(ready, draftsCount) {
+    const draftNote = draftsCount ? ' (' + draftsCount + ' دستهٔ بدون محصول ذخیره نشد)' : '';
+    let pin = sessionStorage.getItem(PIN_KEY) || '';
+
+    if (!pin) {
+      const entered = window.prompt('کد مدیریت منو را وارد کنید');
+      pin = (entered || '').trim();
+    }
+    if (!pin) {
+      this.applyLocalOnly(ready, '⚠️ بدون کد مدیریت ذخیره نشد؛ تغییرات فقط روی همین دستگاه است');
       return;
     }
 
-    this.showToast(drafts.length
-      ? '✅ ذخیره شد · ' + drafts.length + ' دستهٔ بدون محصول ذخیره نشد'
-      : '✅ تغییرات با موفقیت ذخیره شد');
-    setTimeout(() => {
-      this.close();
-      window.location.reload();
-    }, 1000);
+    this.showToast('⏳ در حال ذخیره روی سرور…');
+    try {
+      const res = await fetch(API_SAVE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: pin, categories: ready })
+      });
+      const json = await res.json().catch(() => ({}));
+
+      if (res.status === 403) {
+        sessionStorage.removeItem(PIN_KEY);
+        this.showToast('❌ کد مدیریت درست نیست');
+        return;
+      }
+      if (json.error === 'admin_pin_not_configured') {
+        this.applyLocalOnly(ready, '⚠️ کد مدیریت روی سرور تنظیم نشده است');
+        return;
+      }
+      if (!res.ok || !json.ok) throw new Error('server_error');
+
+      sessionStorage.setItem(PIN_KEY, pin);
+      menuData = normalizeCategories(json.categories || ready);
+      currentSignature = signatureOf(menuData);
+      refreshMenu();
+      this.showToast('✅ ذخیره شد · تغییرات برای همهٔ بازدیدکنندگان اعمال می‌شود' + draftNote);
+      setTimeout(() => this.close(), 1200);
+    } catch (err) {
+      this.applyLocalOnly(ready, '⚠️ سرور در دسترس نبود؛ تغییرات فقط روی همین دستگاه ذخیره شد');
+    }
   }
 
   /* ——— داشبورد دسته‌ها ——— */
@@ -873,18 +914,30 @@ let state = { cat: 0, filter: ALL_FILTER };
 const $ = (id) => document.getElementById(id);
 const faNum = (val) => Number(val).toLocaleString('fa-IR');
 
-function loadData() {
-  let parsed;
+/* ——————————————————————————————————————————————
+   حافظهٔ مشترک منو روی سرور:
+   هر تغییری که مدیر ذخیره می‌کند روی سرور نوشته می‌شود و
+   هر بازدیدکننده (لینک یا QR) حداکثر تا ۱۵ ثانیه همان را می‌بیند.
+   —————————————————————————————————————————————— */
+const API_GET = '/functions/getMenu';
+const API_SAVE = '/functions/saveMenu';
+const PIN_KEY = 'rocco_admin_pin';
+let currentSignature = '';
 
+const signatureOf = (list) => JSON.stringify(list);
+
+function readLocalRaw() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
-    parsed = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_DATA));
-    if (!Array.isArray(parsed)) parsed = JSON.parse(JSON.stringify(INITIAL_DATA));
+    const parsed = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(INITIAL_DATA));
+    return Array.isArray(parsed) ? parsed : JSON.parse(JSON.stringify(INITIAL_DATA));
   } catch (e) {
-    parsed = JSON.parse(JSON.stringify(INITIAL_DATA));
+    return JSON.parse(JSON.stringify(INITIAL_DATA));
   }
+}
 
-  menuData = parsed
+function normalizeCategories(list) {
+  return (Array.isArray(list) ? list : [])
     .filter(cat => cat && Array.isArray(cat.items) && cat.items.length > 0)
     .map(cat => ({
       ...cat,
@@ -901,6 +954,38 @@ function loadData() {
         tags: Array.isArray(item.tags) ? item.tags : []
       }))
     }));
+}
+
+function loadData() {
+  menuData = normalizeCategories(readLocalRaw());
+  currentSignature = signatureOf(menuData);
+}
+
+async function fetchServerMenu() {
+  const res = await fetch(API_GET + '?t=' + Date.now(), { cache: 'no-store' });
+  const json = await res.json();
+  if (!json || !json.ok || !Array.isArray(json.categories) || !json.categories.length) return null;
+  return json;
+}
+
+async function syncFromServer() {
+  try {
+    if (admin && admin.overlay && admin.overlay.classList.contains('active')) return;
+  } catch (e) { /* پنل هنوز آماده نیست */ }
+
+  try {
+    const json = await fetchServerMenu();
+    if (!json) return;
+    const next = normalizeCategories(json.categories);
+    const nextSignature = signatureOf(next);
+    if (nextSignature === currentSignature) return;
+
+    menuData = next;
+    currentSignature = nextSignature;
+    if (state.cat >= menuData.length) state.cat = 0;
+    renderNav();
+    renderPanel();
+  } catch (e) { /* آفلاین: نسخهٔ ذخیره‌شده روی همین دستگاه نمایش داده می‌شود */ }
 }
 
 function applyAccent(accentObj) {
@@ -1046,6 +1131,11 @@ $('footerTagline').textContent = CAFE_INFO.tagline;
 $('footerHours').textContent = CAFE_INFO.hours;
 
 const admin = new RoccoAdmin(menuData);
+
+/* دریافت نسخهٔ مشترک از سرور و همگام‌سازی زنده با پنل مدیریت */
+syncFromServer();
+setInterval(syncFromServer, 15000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) syncFromServer(); });
 </script>
 </body>
 </html>
