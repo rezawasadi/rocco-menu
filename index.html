@@ -655,7 +655,7 @@ class RoccoAdmin {
         this.applyLocalOnly(ready, '⚠️ کد مدیریت روی سرور تنظیم نشده است');
         return;
       }
-      if (!res.ok || !json.ok) throw new Error('server_error');
+      if (!res.ok || !json.ok) throw new Error(json.error || 'server_error');
 
       sessionStorage.setItem(PIN_KEY, pin);
       menuData = normalizeCategories(json.categories || ready);
@@ -664,7 +664,7 @@ class RoccoAdmin {
       this.showToast('✅ ذخیره شد · تغییرات برای همهٔ بازدیدکنندگان اعمال می‌شود' + draftNote);
       setTimeout(() => this.close(), 1200);
     } catch (err) {
-      this.applyLocalOnly(ready, '⚠️ سرور در دسترس نبود؛ تغییرات فقط روی همین دستگاه ذخیره شد');
+      this.applyLocalOnly(ready, '⚠️ ذخیره روی سرور انجام نشد (' + (err && err.message ? err.message : 'network') + ')؛ تغییرات فقط روی همین دستگاه ماند');
     }
   }
 
@@ -919,8 +919,11 @@ const faNum = (val) => Number(val).toLocaleString('fa-IR');
    هر تغییری که مدیر ذخیره می‌کند روی سرور نوشته می‌شود و
    هر بازدیدکننده (لینک یا QR) حداکثر تا ۱۵ ثانیه همان را می‌بیند.
    —————————————————————————————————————————————— */
-const API_GET = '/functions/getMenu';
-const API_SAVE = '/functions/saveMenu';
+/* آدرس کامل سرور مشترک: صفحه از هر دامنه‌ای باز شود (گیت‌هاب، QR روی میز، …)
+   داده‌ها را از همین سرور می‌خواند و روی همین سرور ذخیره می‌کند */
+const API_ORIGIN = 'https://base44.app/api/apps/6ada5bcf8b28629c9afca2dd';
+const API_GET = API_ORIGIN + '/functions/getMenu';
+const API_SAVE = API_ORIGIN + '/functions/saveMenu';
 const PIN_KEY = 'rocco_admin_pin';
 let currentSignature = '';
 
@@ -963,6 +966,7 @@ function loadData() {
 
 async function fetchServerMenu() {
   const res = await fetch(API_GET + '?t=' + Date.now(), { cache: 'no-store' });
+  if (!res.ok) return null;
   const json = await res.json();
   if (!json || !json.ok || !Array.isArray(json.categories) || !json.categories.length) return null;
   return json;
