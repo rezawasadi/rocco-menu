@@ -1,0 +1,246 @@
+/**
+ * ROCCO — مدل داده‌ی منو (شی‌گرا و قابل توسعه)
+ *
+ * افزودن بخش جدید:
+ *   const menu = createMenu();
+ *   menu.addCategory(new MenuCategory({ id: 'shisha', title: 'قلیان', latin: 'HOOKAH', accent: NEON.green, items: [...] }));
+ *
+ * افزودن محصول به یک بخش:
+ *   menu.addItem('hot', new MenuItem({ id: 'ris', name: 'ریستریتو', price: 85000 }));
+ *
+ * حذف:
+ *   menu.removeItem('hot', 'espresso');   menu.removeCategory('tea');
+ *
+ * برای ذخیره‌ی ساختار فعلی (مثلاً روی سرور) از menu.toConfig() استفاده کن.
+ */
+
+export const ALL_FILTER = 'همه';
+
+/** پالت‌های نئونی آماده — هر بخش یکی از این‌ها را می‌گیرد */
+export const NEON = {
+  amber: { key: 'amber', name: 'کهربایی', primary: '#FFC107', rgb: '255 193 7' },
+  cyan: { key: 'cyan', name: 'فیروزه‌ای', primary: '#00E5FF', rgb: '0 229 255' },
+  violet: { key: 'violet', name: 'بنفش', primary: '#A78BFA', rgb: '167 139 250' },
+  emerald: { key: 'emerald', name: 'زمرد', primary: '#34D399', rgb: '52 211 153' },
+  pink: { key: 'pink', name: 'سرخابی', primary: '#FF2D55', rgb: '255 45 85' },
+  lime: { key: 'lime', name: 'لیمویی', primary: '#A3E635', rgb: '163 230 53' },
+};
+
+export class MenuItem {
+  constructor({ id, name, latin = '', description = '', price = 0, tags = [], featured = false }) {
+    this.id = id;
+    this.name = name;
+    this.latin = latin;
+    this.description = description;
+    this.price = price;
+    this.tags = [...tags];
+    this.featured = featured;
+  }
+
+  addTag(tag) {
+    if (!this.tags.includes(tag)) this.tags.push(tag);
+    return this;
+  }
+
+  removeTag(tag) {
+    this.tags = this.tags.filter((t) => t !== tag);
+    return this;
+  }
+
+  hasTag(tag) {
+    return this.tags.includes(tag);
+  }
+
+  update(patch = {}) {
+    Object.assign(this, patch);
+    return this;
+  }
+}
+
+export class MenuCategory {
+  constructor({ id, title, latin = '', tagline = '', icon = 'Coffee', accent = NEON.amber, filters = [], items = [] }) {
+    this.id = id;
+    this.title = title;
+    this.latin = latin;
+    this.tagline = tagline;
+    this.icon = icon;
+    this.accent = accent;
+    this.filters = [...filters];
+    this.items = items.map((item) => (item instanceof MenuItem ? item : new MenuItem(item)));
+  }
+
+  addItem(item) {
+    this.items.push(item instanceof MenuItem ? item : new MenuItem(item));
+    return this;
+  }
+
+  removeItem(itemId) {
+    this.items = this.items.filter((i) => i.id !== itemId);
+    return this;
+  }
+
+  updateItem(itemId, patch) {
+    const found = this.items.find((i) => i.id === itemId);
+    if (found) found.update(patch);
+    return this;
+  }
+
+  /** فیلتر بر اساس برچسب؛ ALL_FILTER همه‌ی آیتم‌ها را برمی‌گرداند */
+  filterBy(tag = ALL_FILTER) {
+    if (!tag || tag === ALL_FILTER) return this.items;
+    return this.items.filter((item) => item.hasTag(tag));
+  }
+}
+
+export class MenuEngine {
+  constructor({ cafe = {}, categories = [] } = {}) {
+    this.cafe = cafe;
+    this.categories = categories.map((c) => (c instanceof MenuCategory ? c : new MenuCategory(c)));
+  }
+
+  addCategory(category) {
+    this.categories.push(category instanceof MenuCategory ? category : new MenuCategory(category));
+    return this;
+  }
+
+  removeCategory(id) {
+    this.categories = this.categories.filter((c) => c.id !== id);
+    return this;
+  }
+
+  getCategory(id) {
+    return this.categories.find((c) => c.id === id);
+  }
+
+  addItem(categoryId, item) {
+    this.getCategory(categoryId)?.addItem(item);
+    return this;
+  }
+
+  removeItem(categoryId, itemId) {
+    this.getCategory(categoryId)?.removeItem(itemId);
+    return this;
+  }
+
+  totalItems() {
+    return this.categories.reduce((sum, c) => sum + c.items.length, 0);
+  }
+
+  toConfig() {
+    return { cafe: this.cafe, categories: this.categories };
+  }
+}
+
+export const menuConfig = {
+  cafe: {
+    name: 'راکو',
+    latin: 'ROCCO',
+    tagline: 'قهوه‌ی دست‌ساز، دسر تازه و صبحانه‌ای که روزت را می‌سازد.',
+    hours: 'هر روز ۸:۰۰ تا ۰۰:۰۰',
+    instagram: { handle: '@rocco.cafe', url: 'https://instagram.com/rocco.cafe' },
+    wifi: { ssid: 'Rocco Guest', password: 'rocco1404' },
+  },
+  categories: [
+    {
+      id: 'hot',
+      title: 'قهوه‌ی گرم',
+      latin: 'HOT COFFEE',
+      tagline: 'دانه‌ی تک‌خاستگاه، رست تازه‌ی هفتگی و شیری که با دقت استیم می‌شود.',
+      icon: 'Coffee',
+      accent: NEON.amber,
+      filters: ['پرطرفدار', 'شیردار', 'تلخ و قوی', 'بدون کافئین'],
+      items: [
+        { id: 'espresso', name: 'اسپرسو', latin: 'Espresso', description: 'دبل شات، ترکیب ۷۰٪ عربیکا برزیل و ۳۰٪ روبوستا با کرمای غلیظ.', price: 95000, tags: ['تلخ و قوی', 'پرطرفدار'] },
+        { id: 'americano', name: 'آمریکانو', latin: 'Americano', description: 'دو شات اسپرسو با آب داغ؛ بدنه‌ی روشن و پایان تلخ تمیز.', price: 115000, tags: ['تلخ و قوی'] },
+        { id: 'latte', name: 'لاته', latin: 'Caffe Latte', description: 'شیر مخملی روی اسپرسو، با لته‌آرت دست‌ساز باریستا.', price: 165000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+        { id: 'cappuccino', name: 'کاپوچینو', latin: 'Cappuccino', description: 'فوم بلند و کاکائوی رویی؛ تعادل کلاسیک ایتالیایی.', price: 155000, tags: ['شیردار'] },
+        { id: 'mocha', name: 'موکا', latin: 'Cafe Mocha', description: 'شکلات تلخ ۷۰٪، اسپرسو و شیر بخارپز با خامه‌ی سبک.', price: 185000, tags: ['شیردار'] },
+        { id: 'flat-white', name: 'فلت وایت', latin: 'Flat White', description: 'نسبت شیر کمتر و طعم قهوه‌ی پررنگ‌تر برای طرفداران بدنه.', price: 175000, tags: ['شیردار'] },
+        { id: 'decaf', name: 'اسپرسو دیکف', latin: 'Decaf Espresso', description: 'بدون کافئین، با همان بدنه و شیرینی طبیعی دانه.', price: 105000, tags: ['بدون کافئین', 'تلخ و قوی'] },
+      ],
+    },
+    {
+      id: 'cold',
+      title: 'نوشیدنی سرد',
+      latin: 'ICED DRINKS',
+      tagline: 'یخِ خردشده، لیوان سرد و ترکیب‌هایی که هوای گرم را جا می‌گذارند.',
+      icon: 'Snowflake',
+      accent: NEON.cyan,
+      filters: ['پرطرفدار', 'شیردار', 'میوه‌ای'],
+      items: [
+        { id: 'iced-latte', name: 'آیس لاته', latin: 'Iced Latte', description: 'اسپرسو روی شیر سرد و یخ؛ خنک، ملایم و پرطرفدار.', price: 185000, tags: ['شیردار', 'پرطرفدار'], featured: true },
+        { id: 'iced-americano', name: 'آیس آمریکانو', latin: 'Iced Americano', description: 'تلخی روشن روی یخ، با رایحه‌ی مرکباتی دانه‌ی اتیوپی.', price: 135000, tags: [] },
+        { id: 'frappe-caramel', name: 'فراپه کارامل', latin: 'Caramel Frappé', description: 'قهوه‌ی سرد، کارامل نمکی و خامه؛ شیرین و خنک.', price: 225000, tags: ['شیردار', 'پرطرفدار'] },
+        { id: 'mojito', name: 'موهیتو کلاسیک', latin: 'Classic Mojito', description: 'لیموی تازه، نعنا و سودا روی یخ خردشده.', price: 165000, tags: ['میوه‌ای', 'پرطرفدار'] },
+        { id: 'lemonade', name: 'لیموناد نعنا', latin: 'Mint Lemonade', description: 'آب‌لیموی تازه با شربت دست‌ساز و برگ نعنا.', price: 155000, tags: ['میوه‌ای'] },
+        { id: 'iced-mocha', name: 'آیس موکا', latin: 'Iced Mocha', description: 'شکلات، اسپرسو و شیر سرد با تاپینگ کاکائو.', price: 195000, tags: ['شیردار'] },
+      ],
+    },
+    {
+      id: 'brew',
+      title: 'کلد برو و دمی',
+      latin: 'COLD BREW & POUR OVER',
+      tagline: 'دم‌آوری آرام، ۱۶ ساعت خیساندن و عصاره‌گیری دقیق با ترازو.',
+      icon: 'CupSoda',
+      accent: NEON.violet,
+      filters: ['کلد برو', 'دمی', 'پرطرفدار'],
+      items: [
+        { id: 'cold-brew', name: 'کلد برو کلاسیک', latin: 'Classic Cold Brew', description: '۱۶ ساعت دم سرد؛ شیرینی طبیعی و بدون تلخی.', price: 165000, tags: ['کلد برو', 'پرطرفدار'] },
+        { id: 'cold-brew-coconut', name: 'کلد برو نارگیل', latin: 'Coconut Cold Brew', description: 'کلد برو با شیر نارگیل و رایحه‌ی وانیل بوربون.', price: 185000, tags: ['کلد برو'] },
+        { id: 'v60', name: 'وی ۶۰ اتیوپی', latin: 'V60 Ethiopia', description: 'تک‌خاستگاه یرگاچف؛ رایحه‌ی یاس، هلو و اسیدیته‌ی روشن.', price: 195000, tags: ['دمی'], featured: true },
+        { id: 'chemex', name: 'کمکس کلمبیا', latin: 'Chemex Colombia', description: 'بدنه‌ی شفاف با نت‌های کارامل و بادام.', price: 185000, tags: ['دمی'] },
+        { id: 'aeropress', name: 'ایروپرس', latin: 'AeroPress', description: 'عصاره‌ی غلیظ و نرم؛ فنجانی متعادل برای عصرانه.', price: 175000, tags: ['دمی'] },
+      ],
+    },
+    {
+      id: 'tea',
+      title: 'چای و دمنوش',
+      latin: 'TEA & INFUSION',
+      tagline: 'دمنوش‌های دم‌کرده‌ی روز با گیاهان خشک‌شده در سایه.',
+      icon: 'Leaf',
+      accent: NEON.emerald,
+      filters: ['گیاهی', 'سیاه', 'سرد', 'پرطرفدار'],
+      items: [
+        { id: 'masala', name: 'چای ماسالا', latin: 'Masala Chai', description: 'هل، دارچین، زنجفیل و شیر؛ گرم و ادویه‌ای.', price: 145000, tags: ['گیاهی', 'پرطرفدار'] },
+        { id: 'quince', name: 'دمنوش به و دارچین', latin: 'Quince Infusion', description: 'بهِ خشک‌شده با چوب دارچین؛ ملایم و خوش‌عطر.', price: 135000, tags: ['گیاهی'] },
+        { id: 'sencha', name: 'چای سبز سنچا', latin: 'Sencha Green Tea', description: 'چای سبز ژاپنی با نت‌های علفی و دریایی.', price: 155000, tags: ['گیاهی'] },
+        { id: 'black-tea', name: 'چای سیاه قلم', latin: 'Black Tea', description: 'قلم لاهیجان در قوری سنتی، همراه با نبات.', price: 95000, tags: ['سیاه'] },
+        { id: 'iced-peach', name: 'آیس تی هلو', latin: 'Peach Iced Tea', description: 'چای سیاه سرد با پوره‌ی هلو و یخ.', price: 155000, tags: ['سرد'] },
+      ],
+    },
+    {
+      id: 'dessert',
+      title: 'کیک و دسر',
+      latin: 'CAKES & DESSERTS',
+      tagline: 'شیرینی‌های تازه‌ی روز، پخته‌شده در آشپزخانه‌ی خودمان.',
+      icon: 'CakeSlice',
+      accent: NEON.pink,
+      filters: ['شکلاتی', 'میوه‌ای', 'پرطرفدار'],
+      items: [
+        { id: 'cheesecake', name: 'چیزکیک نیویورکی', latin: 'New York Cheesecake', description: 'بافت متراکم و خامه‌ای روی بیسکویت کره‌ای.', price: 225000, tags: ['پرطرفدار'], featured: true },
+        { id: 'brownie', name: 'براونی فاج', latin: 'Fudge Brownie', description: 'شکلات تلخ ۷۰٪ با مغز نرم و گردوی بوداده.', price: 195000, tags: ['شکلاتی', 'پرطرفدار'] },
+        { id: 'lemon-tart', name: 'تارت لیمو', latin: 'Lemon Tart', description: 'کرم لیموی ترش و شیرین روی تارت کره‌ای.', price: 210000, tags: ['میوه‌ای'] },
+        { id: 'carrot-cake', name: 'کیک هویج و گردو', latin: 'Carrot & Walnut Cake', description: 'ادویه‌ی گرم، هویج رنده‌شده و فراستینگ پنیر خامه‌ای.', price: 195000, tags: [] },
+        { id: 'panna-cotta', name: 'پاناکوتا وانیل', latin: 'Vanilla Panna Cotta', description: 'دسر شیر و وانیل بوربون با سس تمشک.', price: 185000, tags: ['میوه‌ای'] },
+      ],
+    },
+    {
+      id: 'brunch',
+      title: 'صبحانه و برانچ',
+      latin: 'BREAKFAST & BRUNCH',
+      tagline: 'از ۸ صبح تا ۱۳؛ تخم‌مرغ تازه، نان تازه و سبزیجات بازار روز.',
+      icon: 'Croissant',
+      accent: NEON.lime,
+      filters: ['صبحانه', 'گیاهی', 'پرطرفدار'],
+      items: [
+        { id: 'omelette', name: 'املت قارچ و پنیر', latin: 'Mushroom & Cheese Omelette', description: 'سه تخم‌مرغ محلی، قارچ سوتی و پنیر گودا.', price: 245000, tags: ['صبحانه', 'پرطرفدار'] },
+        { id: 'avocado-toast', name: 'آووکادو تست', latin: 'Avocado Toast', description: 'نان خمیرمایه، آووکادو، تخم‌مرغ آب‌پز و دانه‌ی کنجد.', price: 285000, tags: ['گیاهی', 'پرطرفدار'], featured: true },
+        { id: 'croissant', name: 'کروسان + مربا', latin: 'Butter Croissant', description: 'کروسان کره‌ای تازه با مربای خانگی و کره‌ی حیوانی.', price: 165000, tags: ['صبحانه'] },
+        { id: 'pancake', name: 'پنکیک سه‌تایی', latin: 'Three Pancakes', description: 'پنکیک نرم با شربت افرا، موز و توت‌فرنگی.', price: 235000, tags: ['صبحانه'] },
+        { id: 'french-toast', name: 'نان تست فرانسوی', latin: 'French Toast', description: 'نان بریوش در شیر و وانیل با پودر قند و دارچین.', price: 215000, tags: ['صبحانه'] },
+      ],
+    },
+  ],
+};
+
+export const createMenu = () => new MenuEngine(menuConfig);
